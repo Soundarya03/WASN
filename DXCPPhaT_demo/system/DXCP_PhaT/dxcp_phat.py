@@ -17,36 +17,35 @@ import sys
 import math
 import numpy as np
 from scipy import signal
-# endregion
 
 
 class DXCPPhaT:
     
-    # default parameters (configuration) defined as class attributes
+    # default parameters 
     defaultParams = {
-        # reference sampling rate
+        
         'RefSampRate_fs_Hz': 16000, 
-        # frame size (power of 2) of input data
+        
         'FrameSize': 2**11, 
-        # frame shift of DXCP-PhaT (power of 2 & >= FrameSize)
+       
         'FFTshift': 2**13, 
-        # FFT size of DXCP-PhaT (power of 2 & >= FFTshift)
+       
         'FFTsize': 2**15, 
-        # accumulation time in sec (usually 5s as in DXCP)
+       
         'AccumTime_B_sec': 5, 
-        # resetting period of DXCP-PhaT in sec. Default: 30
+        
         'ResetPeriod_sec': 30, 
-        # smoothing constant for GCSD1 averaging (DXCP-PhaT)
+        
         'SmoConst_CSDPhaT_alpha': .5, 
-        # additional waiting for container filling (>InvShiftFactor-1)
+       
         'AddContWait_NumFr': 0, 
-        # settling time of CSD-2 averaging
+        
         'SettlingCSD2avg_NumFr': 4, 
-        # minimum value of |Z1*conj(Z2)| to avoid devision by 0 in GCC-PhaT
+        
         'Z_12_abs_min': 1e-12, 
-        # maximum absolute SRO value possible to estimate (-> Lambda)
+      
         'SROmax_abs_ppm': 1000, 
-        # flag for displaying estimated values in terminal
+        
         'Flag_DisplayResults': 1
     }
 
@@ -67,7 +66,7 @@ class DXCPPhaT:
         Flag_DisplayResults = defaultParams['Flag_DisplayResults']
         ):
         
-        # Main parameters (configuration)
+        # Main parameters
         self.RefSampRate_fs_Hz = RefSampRate_fs_Hz
         self.FrameSize = FrameSize
         self.FFTshift = FFTshift
@@ -105,18 +104,18 @@ class DXCPPhaT:
         self.redFFTsize1 = self.FFTsize - self.FrameSize
         self.redFFTsize2 = self.FFTsize - self.LowFreq_InpSig_fl_bin + 1
         
-        # Initialize state variables of DXCP-PhaT.
-        # SRO estimate (updated once per signal segment)
+        # Initialize state variables
+        
         self.SROppm_est_seg = 0
-        # STO estimate (updated once per signal segment)
+        
         self.STOsmp_est_seg = 0
-        # current SRO estimate
+       
         self.SROppm_est_ell = 0
-        # current STO estimate
+        
         self.STOsmp_est_ell = 0
-        # time offset between channels at the end of the current frame
+        
         self.TimeOffsetEndSeg_est_out = 0
-        # Averaged CSD with Phase Transform
+        
         self.GCSD_PhaT_avg = np.zeros((self.FFTsize,1), dtype=complex)
         # Container with past GCSD_PhaT_avg values
         self.GCSD_PhaT_avg_Cont = \
@@ -139,14 +138,9 @@ class DXCPPhaT:
         # counter of recursive simple averaging over shifted CCF-1 (STO)
         self.ell_shftCCF1avg = 1
         
-        # print an info after creation of DXCPPhaT instance in a help terminal
+       
         print('... instance object for DXCP-PhaT created ...')
         sys.stdout.flush()
-        
-        # print --SmoConst_CSDPhaT_alpha parameter of DXCP-PhaT method
-        #print('... DXCP-PhaT method: --SmoConst_CSDPhaT_alpha = %4.3f'% \
-        #    (self.SmoConst_CSDPhaT_alpha))
-        #sys.stdout.flush()
 
 
     """
@@ -156,7 +150,7 @@ class DXCPPhaT:
     """
     def process_data(self, z_12_ell):
 
-        # fill the internal buffer of DXCP-PhaT-CL (from right to left)
+        # fill the internal buffer
         self.InputBuffer[np.arange(self.redFFTsize1), :] = \
             self.InputBuffer[np.arange(self.FrameSize, self.FFTsize), :]
         self.InputBuffer[np.arange(self.redFFTsize1, self.FFTsize), :] = \
